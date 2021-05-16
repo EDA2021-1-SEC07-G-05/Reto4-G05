@@ -36,6 +36,16 @@ def comunica_iniciador():
 
 # Funciones para la carga de datos
 def comunica_carga_datos(catalog):
+    file_countries = cf.data_dir + "countries.csv"
+    data_countries = csv.DictReader(open(file_countries, encoding= "utf-8"), delimiter= ",")
+    for country in data_countries:
+        model.carga_CountryAsKey(catalog,country)
+
+    file_LD = cf.data_dir + "landing_points.csv"
+    data_LD = csv.DictReader(open(file_LD, encoding= "utf-8"), delimiter= ",")
+    for LD in data_LD:
+        model.carga_LandingPointsAsKeys(catalog,LD)
+
     file_connect = cf.data_dir + "connections.csv"
     data_connections = csv.DictReader(open(file_connect, encoding= "utf-8"), delimiter= ",")
     for connect in data_connections:

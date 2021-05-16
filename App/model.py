@@ -58,6 +58,29 @@ def carga_connections(catalog,connection):
     addConnection(graph,origin,destination,length)
     return None
 
+def carga_CountryAsKey(catalog,country_data):
+    mapa = catalog["countries"]
+    country = country_data["CountryName"].lower()
+    mapa_sec = mp.newMap(numelements= 50, maptype= "PROBING", comparefunction= compareStopIds)
+    entry = mp.get(mapa,country)
+    if entry is None and country is not "":
+        mp.put(mapa,country,mapa_sec)
+    return None
+
+def carga_LandingPointsAsKeys(catalog,LandingPointData):
+    mapa_1 = catalog["countries"]
+    country = getCountry(LandingPointData)
+    LD_id = LandingPointData["landing_point_id"]
+    if country is not "":
+        entry_1 = mp.get(mapa_1, country)
+        mapa_2 = me.getValue(entry_1)
+        entry_2 = mp.get(mapa_2, LD_id)
+        if entry_2 is None:
+            lista = lt.newList(datastructure= "ARRAY_LIST", cmpfunction= compareCables)
+            mp.put(mapa_2, LD_id, lista)
+        mp.put(mapa_1,country,mapa_2)
+    return None
+
 # Funciones para creacion de datos
 def formatOriginVertex(connection):
     return connection["\ufefforigin"]+"-"+connection["cable_id"]
@@ -75,6 +98,10 @@ def addConnection(graph, origin, destination, length):
     if edge is None:
         gr.addEdge(graph,origin,destination,length)
     return None
+
+def getCountry(LandingPoint):
+    info = LandingPoint["name"].split(", ")
+    return info[-1].lower()
 
 # Funciones de consulta
 
@@ -94,3 +121,11 @@ def compareStopIds(stop, keyvaluestop):
         return 1
     else:
         return -1
+
+def compareCables(cable1,cable2):
+    if cable1 > cable2:
+        return 1
+    elif cable1 < cable2:
+        return -1
+    else:
+        return 0

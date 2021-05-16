@@ -63,7 +63,7 @@ while True:
         time_1 = tm.perf_counter()
         controller.comunica_carga_datos(catalog)
         time_2 = tm.perf_counter()
-        print(f"Tiempo de ejecución: {time_2-time_1}")
+        print(f"Tiempo de ejecución: {time_2-time_1}\n")
 
 
     else:
