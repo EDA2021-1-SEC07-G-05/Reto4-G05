@@ -39,7 +39,12 @@ los mismos.
 """
 
 # Construccion de modelos
-
+def InitCatalog():
+    catalog = {"connections":None,
+               "countries":None}
+    
+    catalog["connections"] = gr.newGraph(datastructure= "ADJ_LIST")
+    return catalog
 # Funciones para agregar informacion al catalogo
 
 # Funciones para creacion de datos
@@ -49,3 +54,16 @@ los mismos.
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 # Funciones de ordenamiento
+
+#Funciones de comparación
+def compareStopIds(stop, keyvaluestop):
+    """
+    Compara dos estaciones
+    """
+    stopcode = keyvaluestop['key']
+    if (stop == stopcode):
+        return 0
+    elif (stop > stopcode):
+        return 1
+    else:
+        return -1
