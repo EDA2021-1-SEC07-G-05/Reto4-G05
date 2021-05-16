@@ -43,11 +43,38 @@ def InitCatalog():
     catalog = {"connections":None,
                "countries":None}
     
-    catalog["connections"] = gr.newGraph(datastructure= "ADJ_LIST")
+    catalog["connections"] = gr.newGraph(datastructure= "ADJ_LIST", directed= True, size=14000, comparefunction= compareStopIds)
+    catalog["countries"] = mp.newMap(numelements= 50, maptype="PROBING")
     return catalog
+
 # Funciones para agregar informacion al catalogo
+def carga_connections(catalog,connection):
+    graph = catalog["connections"]
+    length = connection["cable_length"]
+    origin = formatOriginVertex(connection)
+    destination = formatDestinationVertex(connection)
+    addLandingPoint(origin, graph)
+    addLandingPoint(destination,graph)
+    addConnection(graph,origin,destination,length)
+    return None
 
 # Funciones para creacion de datos
+def formatOriginVertex(connection):
+    return connection["\ufefforigin"]+"-"+connection["cable_id"]
+
+def formatDestinationVertex(connection):
+    return connection["destination"]+"-"+connection["cable_id"]
+
+def addLandingPoint(vertex,graph):
+    if not gr.containsVertex(graph,vertex):
+        gr.insertVertex(graph,vertex)
+    return None
+
+def addConnection(graph, origin, destination, length):
+    edge = gr.getEdge(graph,origin,destination)
+    if edge is None:
+        gr.addEdge(graph,origin,destination,length)
+    return None
 
 # Funciones de consulta
 

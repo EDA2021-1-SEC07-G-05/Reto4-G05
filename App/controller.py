@@ -20,6 +20,7 @@
  * along withthis program.  If not, see <http://www.gnu.org/licenses/>.
  """
 
+from os import read
 import config as cf
 import model
 import csv
@@ -34,6 +35,12 @@ def comunica_iniciador():
     return model.InitCatalog()
 
 # Funciones para la carga de datos
+def comunica_carga_datos(catalog):
+    file_connect = cf.data_dir + "connections.csv"
+    data_connections = csv.DictReader(open(file_connect, encoding= "utf-8"), delimiter= ",")
+    for connect in data_connections:
+        model.carga_connections(catalog,connect)
+    return None
 
 # Funciones de ordenamiento
 

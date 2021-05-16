@@ -22,6 +22,7 @@
 
 import config as cf
 import sys
+import time as tm
 import controller
 from DISClib.ADT import list as lt
 assert cf
@@ -36,12 +37,13 @@ operación solicitada
 
 def printMenu():
     print("Bienvenido")
-    print("1- Cargar información en el catálogo")
-    print("2- Requerimiento 1")
-    print("3- Requerimiento 2")
-    print("4- Requerimiento 3")
-    print("5- Requerimiento 4")
-    print("6- Requerimiento 5")
+    print("1- Inicializar catálogo")
+    print("2- Cargar información en el catálogo")
+    print("3- Requerimiento 1")
+    print("4- Requerimiento 2")
+    print("5- Requerimiento 3")
+    print("6- Requerimiento 4")
+    print("7- Requerimiento 5")
     print("0- Salir")
 
 catalog = None
@@ -53,12 +55,16 @@ while True:
     printMenu()
     inputs = input('Seleccione una opción para continuar\n')
     if int(inputs[0]) == 1:
+        print("Inicializando catálogo...")
         catalog = controller.comunica_iniciador()
-        print("Cargando información de los archivos ....")
-        
 
     elif int(inputs[0]) == 2:
-        pass
+        print("Cargando los datos...")
+        time_1 = tm.perf_counter()
+        controller.comunica_carga_datos(catalog)
+        time_2 = tm.perf_counter()
+        print(f"Tiempo de ejecución: {time_2-time_1}")
+
 
     else:
         sys.exit(0)
