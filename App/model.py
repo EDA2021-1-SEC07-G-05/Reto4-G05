@@ -70,6 +70,7 @@ def carga_CountryAsKey(catalog,country_data):
 def carga_LandingPointsAsKeys(catalog,LandingPointData):
     mapa_1 = catalog["countries"]
     country = getCountry(LandingPointData)
+    print(country)
     LD_id = LandingPointData["landing_point_id"]
     if country is not "":
         entry_1 = mp.get(mapa_1, country)
