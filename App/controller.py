@@ -40,6 +40,7 @@ def comunica_carga_datos(catalog):
     data_countries = csv.DictReader(open(file_countries, encoding= "utf-8"), delimiter= ",")
     for country in data_countries:
         model.carga_CountryAsKey(catalog,country)
+        model.carga_Countries_cap(catalog,country)
 
     file_LD = cf.data_dir + "landing_points.csv"
     data_LD = csv.DictReader(open(file_LD, encoding= "utf-8"), delimiter= ",")
@@ -50,8 +51,10 @@ def comunica_carga_datos(catalog):
     data_connections = csv.DictReader(open(file_connect, encoding= "utf-8"), delimiter= ",")
     for connect in data_connections:
         model.carga_connections(catalog,connect)
+        model.carga_CablesInfo(catalog,connect)
 
     model.connect_CableSameLP(catalog)
+    model.SortCablesList(catalog)
     return None
 
 # Funciones de ordenamiento

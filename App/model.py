@@ -26,6 +26,7 @@
 
 
 import config as cf
+import haversine as hs
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
 from DISClib.ADT import graph as gr
@@ -41,11 +42,16 @@ los mismos.
 # Construccion de modelos
 def InitCatalog():
     catalog = {"connections":None,
-               "countries":None}
+               "countries":None,
+               "LandingPoints": None,
+               "countries_info": None,
+               "cables":None}
     
     catalog["connections"] = gr.newGraph(datastructure= "ADJ_LIST", directed= False, size=14000, comparefunction= compareStopIds)
     catalog["countries"] = mp.newMap(numelements= 50, maptype="PROBING")
     catalog["LandingPoints"] = mp.newMap(numelements= 100, maptype="PROBING")
+    catalog["countries_info"] = mp.newMap(numelements= 100, maptype="PROBING")
+    catalog["cables"] = mp.newMap(numelements= 100, maptype="PROBING")
     return catalog
 
 # Funciones para agregar informacion al catalogo
@@ -107,6 +113,55 @@ def connect_CableSameLP(catalog):
                 i += 1
     return None
 
+def carga_Countries_cap(catalog,pais):
+    mapa = catalog["countries_info"]
+    mp.put(mapa,pais["CountryName"].lower(),pais)
+    return None
+
+def carga_CablesInfo(catalog,connection):
+    mapaInfoCables = catalog["cables"]
+    InfoCable = formatCableInfo(connection)
+    id = InfoCable["Id"]
+    mp.put(mapaInfoCables,id,InfoCable)
+    return None
+
+def SortCablesList(catalog):
+    mapa_paises = catalog["countries"]
+    keys_mapa_paises = mp.keySet(mapa_paises)
+    for pais in lt.iterator(keys_mapa_paises):
+        entry_mapas_LP = mp.get(mapa_paises,pais)
+        mapa_LP = me.getValue(entry_mapas_LP)
+        lista_LandingPoints = mp.keySet(mapa_LP)
+        for LandingPoint in lt.iterator(lista_LandingPoints):
+            entry_lista_cables = mp.get(mapa_LP,LandingPoint)
+            lista_cables = me.getValue(entry_lista_cables)
+            sorted_list = sa.sort(lista_cables,compareBandas)
+            mp.put(mapa_LP,LandingPoint,sorted_list)
+        mp.put(mapa_paises,pais,mapa_LP)
+    return None
+
+def connect_capital(catalog):
+    info_LandingPoints = catalog["LandingPoints"]
+    info_paises = catalog["countries_info"]
+    mapa_paises = catalog["countries"]
+    paises = mp.keySet(mapa_paises)
+    for pais in lt.iterator(paises):
+        entry_capital = mp.get(info_paises,pais)
+        entry_LandingPoints_mapa = mp.get(mapa_paises,pais)
+        info_capital = me.getValue(entry_capital)
+        LandingPoints_mapa = me.getValue(entry_LandingPoints_mapa)
+        lat = info_capital["CapitalLatitude"]
+        long = info_capital["CapitalLongitude"]
+        for LandingPoint in lt.iterator(LandingPoints_mapa):
+            LandingPoints = mp.keySet(LandingPoint)
+            for LandingPoint_individual in lt.iterator(LandingPoints):
+                entry_LandingPoint_info = mp.get(info_LandingPoints, LandingPoint_individual)
+                entry_listaCables = mp.get(LandingPoint,LandingPoint_individual)
+                ListaCables = me.getValue(entry_listaCables)
+                LandingPoint_info = me.getValue(entry_LandingPoint_info)
+
+    return None
+
 
 # Funciones para creacion de datos
 def formatOriginVertex(connection):
@@ -116,7 +171,14 @@ def formatDestinationVertex(connection):
     return connection["destination"]+"-"+connection["cable_id"]
 
 def formatVertex(LandingPoint,Cable):
-    return LandingPoint+'-'+Cable
+    return LandingPoint+'-'+Cable["Id"]
+
+def formatCableInfo(connection):
+    Info = {"Id": connection["cable_id"],
+            "name": connection["cable_name"],
+            "length": connection["cable_length"],
+            "banda": connection["capacityTBPS"]}
+    return Info
 
 def addLandingPoint(vertex,graph):
     if not gr.containsVertex(graph,vertex):
@@ -134,7 +196,6 @@ def getCountry(LandingPoint):
     return info[-1].lower()
 
 def addCableInMap(connection,mapa_paises,mapa_LP):
-    cable = connection["cable_id"]
     LP_Origin = connection["\ufefforigin"]
     LP_destination = connection["destination"]
     entryO, entryD = mp.get(mapa_LP, LP_Origin), mp.get(mapa_LP, LP_destination)
@@ -143,8 +204,8 @@ def addCableInMap(connection,mapa_paises,mapa_LP):
     mapa_LPO, mapa_LPD = me.getValue(entry_O1), me.getValue(enrty_D1)
     entry_O2, entry_D2 = mp.get(mapa_LPO,LP_Origin), mp.get(mapa_LPD,LP_destination)
     cablesOrigin, cablesDestination = me.getValue(entry_O2), me.getValue(entry_D2)
-    lt.addLast(cablesOrigin,cable)
-    lt.addLast(cablesDestination,cable)
+    lt.addLast(cablesOrigin,formatCableInfo(connection))
+    lt.addLast(cablesDestination,formatCableInfo(connection))
     return None
 
 # Funciones de consulta
@@ -170,6 +231,16 @@ def compareCables(cable1,cable2):
     if cable1 > cable2:
         return 1
     elif cable1 < cable2:
+        return -1
+    else:
+        return 0
+
+def compareBandas(cable1,cable2):
+    ancho_1 = cable1["banda"]
+    ancho_2 = cable2["banda"]
+    if ancho_1 > ancho_2:
+        return 1
+    elif ancho_2 > ancho_1:
         return -1
     else:
         return 0
