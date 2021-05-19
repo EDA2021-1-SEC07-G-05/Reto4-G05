@@ -50,6 +50,8 @@ def comunica_carga_datos(catalog):
     data_connections = csv.DictReader(open(file_connect, encoding= "utf-8"), delimiter= ",")
     for connect in data_connections:
         model.carga_connections(catalog,connect)
+
+    model.connect_CableSameLP(catalog)
     return None
 
 # Funciones de ordenamiento

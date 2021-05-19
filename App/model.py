@@ -43,19 +43,23 @@ def InitCatalog():
     catalog = {"connections":None,
                "countries":None}
     
-    catalog["connections"] = gr.newGraph(datastructure= "ADJ_LIST", directed= True, size=14000, comparefunction= compareStopIds)
+    catalog["connections"] = gr.newGraph(datastructure= "ADJ_LIST", directed= False, size=14000, comparefunction= compareStopIds)
     catalog["countries"] = mp.newMap(numelements= 50, maptype="PROBING")
+    catalog["LandingPoints"] = mp.newMap(numelements= 100, maptype="PROBING")
     return catalog
 
 # Funciones para agregar informacion al catalogo
 def carga_connections(catalog,connection):
     graph = catalog["connections"]
+    mapa_paises = catalog["countries"]
+    mapa_LP = catalog["LandingPoints"]
     length = connection["cable_length"]
     origin = formatOriginVertex(connection)
     destination = formatDestinationVertex(connection)
     addLandingPoint(origin, graph)
     addLandingPoint(destination,graph)
     addConnection(graph,origin,destination,length)
+    addCableInMap(connection,mapa_paises,mapa_LP)
     return None
 
 def carga_CountryAsKey(catalog,country_data):
@@ -68,9 +72,10 @@ def carga_CountryAsKey(catalog,country_data):
     return None
 
 def carga_LandingPointsAsKeys(catalog,LandingPointData):
+    mapaOnlyLP = catalog["LandingPoints"]
+    mp.put(mapaOnlyLP, LandingPointData["landing_point_id"], LandingPointData)
     mapa_1 = catalog["countries"]
     country = getCountry(LandingPointData)
-    print(country)
     LD_id = LandingPointData["landing_point_id"]
     if country is not "":
         entry_1 = mp.get(mapa_1, country)
@@ -82,12 +87,36 @@ def carga_LandingPointsAsKeys(catalog,LandingPointData):
         mp.put(mapa_1,country,mapa_2)
     return None
 
+
+def connect_CableSameLP(catalog):
+    grafo = catalog['connections']
+    mapa_paises = catalog['countries']
+    mapas_LP = mp.valueSet(mapa_paises)
+    for mapa_LP in lt.iterator(mapas_LP):
+        LandingPoints = mp.keySet(mapa_LP)
+        for LandingPoint in lt.iterator(LandingPoints):
+            entry = mp.get(mapa_LP, LandingPoint)
+            list_cables = me.getValue(entry)
+            i = 0
+            for cable in lt.iterator(list_cables):
+                if i != 0:
+                    LastVertex = formatVertex(LandingPoint,anterior)
+                    CurrentVertex = formatVertex(LandingPoint,cable)
+                    gr.addEdge(grafo,LastVertex,CurrentVertex,100)
+                anterior = cable
+                i += 1
+    return None
+
+
 # Funciones para creacion de datos
 def formatOriginVertex(connection):
     return connection["\ufefforigin"]+"-"+connection["cable_id"]
 
 def formatDestinationVertex(connection):
     return connection["destination"]+"-"+connection["cable_id"]
+
+def formatVertex(LandingPoint,Cable):
+    return LandingPoint+'-'+Cable
 
 def addLandingPoint(vertex,graph):
     if not gr.containsVertex(graph,vertex):
@@ -103,6 +132,20 @@ def addConnection(graph, origin, destination, length):
 def getCountry(LandingPoint):
     info = LandingPoint["name"].split(", ")
     return info[-1].lower()
+
+def addCableInMap(connection,mapa_paises,mapa_LP):
+    cable = connection["cable_id"]
+    LP_Origin = connection["\ufefforigin"]
+    LP_destination = connection["destination"]
+    entryO, entryD = mp.get(mapa_LP, LP_Origin), mp.get(mapa_LP, LP_destination)
+    PaisO, PaisD = getCountry(me.getValue(entryO)), getCountry(me.getValue(entryD))
+    entry_O1, enrty_D1 = mp.get(mapa_paises,PaisO), mp.get(mapa_paises,PaisD)
+    mapa_LPO, mapa_LPD = me.getValue(entry_O1), me.getValue(enrty_D1)
+    entry_O2, entry_D2 = mp.get(mapa_LPO,LP_Origin), mp.get(mapa_LPD,LP_destination)
+    cablesOrigin, cablesDestination = me.getValue(entry_O2), me.getValue(entry_D2)
+    lt.addLast(cablesOrigin,cable)
+    lt.addLast(cablesDestination,cable)
+    return None
 
 # Funciones de consulta
 
