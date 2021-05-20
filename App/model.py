@@ -141,6 +141,7 @@ def SortCablesList(catalog):
     return None
 
 def connect_capital(catalog):
+    grafo = catalog["connections"]
     info_LandingPoints = catalog["LandingPoints"]
     info_paises = catalog["countries_info"]
     mapa_paises = catalog["countries"]
@@ -152,14 +153,37 @@ def connect_capital(catalog):
         LandingPoints_mapa = me.getValue(entry_LandingPoints_mapa)
         lat = info_capital["CapitalLatitude"]
         long = info_capital["CapitalLongitude"]
-        for LandingPoint in lt.iterator(LandingPoints_mapa):
-            LandingPoints = mp.keySet(LandingPoint)
-            for LandingPoint_individual in lt.iterator(LandingPoints):
-                entry_LandingPoint_info = mp.get(info_LandingPoints, LandingPoint_individual)
-                entry_listaCables = mp.get(LandingPoint,LandingPoint_individual)
-                ListaCables = me.getValue(entry_listaCables)
-                LandingPoint_info = me.getValue(entry_LandingPoint_info)
-
+        name_capital = info_capital["CapitalName"]
+        LandingPoints = mp.keySet(LandingPoints_mapa)
+        for LandingPoint_individual in lt.iterator(LandingPoints):
+            entry_listaCables = mp.get(LandingPoints_mapa,LandingPoint_individual)
+            ListaCables = me.getValue(entry_listaCables)
+            if not lt.isEmpty(ListaCables):
+                cable_menor_banda = lt.lastElement(ListaCables)
+                vertexCap = formatVertex(name_capital,cable_menor_banda)
+                vertex = formatVertex(LandingPoint_individual,cable_menor_banda)
+                gr.insertVertex(grafo,vertexCap)
+                gr.addEdge(grafo,vertex,vertexCap,100)
+            else:
+                AllLandingPoints = mp.valueSet(info_LandingPoints)
+                menor = 1E16
+                for LP_in_mapa_completo in lt.iterator(AllLandingPoints):
+                    LP_lat = LP_in_mapa_completo["latitude"]
+                    LP_long = LP_in_mapa_completo["longitude"]
+                    distance = hs.haversine((lat,long),(LP_lat,LP_long))
+                    if distance < menor:
+                        menor = distance
+                        id_menor = LP_in_mapa_completo["landing_point_id"]
+                        pais_interes = getCountry(LP_in_mapa_completo)
+                entry_aux1 = mp.get(mapa_paises,pais_interes)
+                mapa_aux = me.getValue(entry_aux1)
+                entry_aux2 = mp.get(mapa_aux,id_menor)
+                lista_aux = me.getValue(entry_aux2)
+                cable_menor_banda = lt.lastElement(lista_aux)
+                vertexCap = formatVertex(name_capital,cable_menor_banda)
+                vertex = formatVertex(id_menor,cable_menor_banda)
+                gr.insertVertex(grafo,vertexCap)
+                gr.addEdge(grafo,vertex,vertexCap,100)
     return None
 
 
@@ -241,6 +265,14 @@ def compareBandas(cable1,cable2):
     if ancho_1 > ancho_2:
         return 1
     elif ancho_2 > ancho_1:
+        return -1
+    else:
+        return 0
+
+def compareDistance(distance1,distance2):
+    if distance1 > distance2:
+        return 1
+    elif distance1 < distance2:
         return -1
     else:
         return 0

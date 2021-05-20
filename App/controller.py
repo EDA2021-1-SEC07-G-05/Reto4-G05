@@ -55,6 +55,7 @@ def comunica_carga_datos(catalog):
 
     model.connect_CableSameLP(catalog)
     model.SortCablesList(catalog)
+    model.connect_capital(catalog)
     return None
 
 # Funciones de ordenamiento
