@@ -233,6 +233,27 @@ def addCableInMap(connection,mapa_paises,mapa_LP):
     return None
 
 # Funciones de consulta
+def consulta_carga_datos(catalog):
+    """
+    Consulta las propiedades de los datos y las estructuras cargadas
+    """
+    grafo = catalog["connections"]
+    mapa_paises= catalog["countries_info"]
+    mapa_LP_info = catalog["LandingPoints"]
+    FirstLDId = "3316"
+    LastCountryId = "chuuk"
+
+    LandingPoints = gr.numVertices(grafo)
+    conexiones = gr.numEdges(grafo)
+    paises = mp.size(mapa_paises)
+    LandingPoints_unique = mp.size(mapa_LP_info)
+
+    entry_LP = mp.get(mapa_LP_info,FirstLDId)
+    entryCountry = mp.get(mapa_paises,LastCountryId)
+    FirstLP = me.getValue(entry_LP)
+    LastCountry = me.getValue(entryCountry)
+
+    return (LandingPoints,conexiones,paises,FirstLP,LastCountry,LandingPoints_unique)
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 

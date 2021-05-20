@@ -58,6 +58,9 @@ def comunica_carga_datos(catalog):
     model.connect_capital(catalog)
     return None
 
+def comunica_consulta_carga(catalog):
+    return model.consulta_carga_datos(catalog)
+
 # Funciones de ordenamiento
 
 # Funciones de consulta sobre el catálogo

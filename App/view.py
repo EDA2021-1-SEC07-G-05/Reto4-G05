@@ -35,6 +35,37 @@ se hace la solicitud al controlador para ejecutar la
 operación solicitada
 """
 
+def execute_consulta_carga(catalog):
+    return controller.comunica_consulta_carga(catalog)
+
+def view_consulta_carga_datos(tupla_info):
+    LandingPoint = tupla_info[3]
+    pais = tupla_info[4]
+    print("\nRESULTADOS DE LA CARGA DE DATOS")
+    print(f"Número de landing points registrados (# de vertices del grafo): {tupla_info[0]}")
+    print(f"Número de landing points únicos registrados (# de vertices con el mismo id de LP): {tupla_info[-1]}")
+    print(f"Número de conexiones registradas: {tupla_info[1]}")
+    print(f"Número de paises registrados: {tupla_info[2]}")
+
+    print("\nINFORMACIÓN DEL PRIMER LANDING POINT CARGADO")
+    identificador = LandingPoint["landing_point_id"]
+    nombre = LandingPoint["name"]
+    latitud = LandingPoint["latitude"]
+    longitud = LandingPoint["longitude"]
+    print(f"Identificador: {identificador}")
+    print(f"Nombre: {nombre}")
+    print(f"Latitud: {latitud}")
+    print(f"Longitud: {longitud}")
+
+    print("\nINFORMACIÓN DEL ÚLTIMO PÁIS CARGADO")
+    nombre_pais = pais["CountryName"]
+    pop = pais["Population"]
+    users = pais["Internet users"]
+    print(f"Pais: {nombre_pais}")
+    print(f"Población: {pop}")
+    print(f"Usuarios de internet: {users}")
+    return None
+
 def printMenu():
     print("Bienvenido")
     print("1- Inicializar catálogo")
@@ -63,7 +94,9 @@ while True:
         time_1 = tm.perf_counter()
         controller.comunica_carga_datos(catalog)
         time_2 = tm.perf_counter()
-        print(f"Tiempo de ejecución: {time_2-time_1}\n")
+        result = execute_consulta_carga(catalog)
+        view_consulta_carga_datos(result)
+        print(f"\nTiempo de ejecución: {time_2-time_1}\n")
 
 
     else:
