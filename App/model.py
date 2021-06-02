@@ -48,6 +48,7 @@ def InitCatalog():
                "connections_directed":None,
                "countries":None,
                "LandingPoints": None,
+               "LandingPoints_names": None,
                "countries_info": None,
                "cables":None}
     
@@ -55,6 +56,7 @@ def InitCatalog():
     catalog["connections_directed"] = gr.newGraph(datastructure= "ADJ_LIST", directed= True, size= 14000, comparefunction= compareStopIds)
     catalog["countries"] = mp.newMap(numelements= 50, maptype="PROBING")
     catalog["LandingPoints"] = mp.newMap(numelements= 100, maptype="PROBING")
+    catalog["LandingPoints_names"] = mp.newMap(numelements= 100, maptype="PROBING")
     catalog["countries_info"] = mp.newMap(numelements= 100, maptype="PROBING")
     catalog["cables"] = mp.newMap(numelements= 100, maptype="PROBING")
     return catalog
@@ -89,6 +91,8 @@ def carga_CountryAsKey(catalog,country_data):
 
 def carga_LandingPointsAsKeys(catalog,LandingPointData):
     mapaOnlyLP = catalog["LandingPoints"]
+    mapaLPNames = catalog["LandingPoints_names"]
+    mp.put(mapaLPNames,getName(LandingPointData),LandingPointData["landing_point_id"])
     mp.put(mapaOnlyLP, LandingPointData["landing_point_id"], LandingPointData)
     mapa_1 = catalog["countries"]
     country = getCountry(LandingPointData)
@@ -256,6 +260,10 @@ def getCountry(LandingPoint):
     info = LandingPoint["name"].split(", ")
     return info[-1].lower()
 
+def getName(LandingPoint):
+    info = LandingPoint["name"].split(", ")
+    return info[0]
+
 def addCableInMap(connection,mapa_paises,mapa_LP):
     LP_Origin = connection["\ufefforigin"]
     LP_destination = connection["destination"]
@@ -292,14 +300,19 @@ def consulta_carga_datos(catalog):
 
     return (LandingPoints,conexiones,paises,FirstLP,LastCountry,LandingPoints_unique)
 
-def consulta_cantidad_clusters(catalog,LP1,LP2):
+def consulta_cantidad_clusters(catalog,LP1_name,LP2_name):
     mismo_cluster = False
     grafo_dirigido = catalog["connections_directed"]
     mapa_paises = catalog["countries"]
     mapa_LP = catalog["LandingPoints"]
+    mapa_LPNames = catalog["LandingPoints_names"]
     estructura_scc = scc.KosarajuSCC(grafo_dirigido)
     cantidad_clusters = estructura_scc["components"]
 
+    Id_1_entry = mp.get(mapa_LPNames,LP1_name)
+    Id_2_entry = mp.get(mapa_LPNames,LP2_name)
+    LP1 = me.getValue(Id_1_entry)
+    LP2 = me.getValue(Id_2_entry)
     entry_LP1 = mp.get(mapa_LP,LP1)
     entry_LP2 = mp.get(mapa_LP,LP2)
     LP1_info = me.getValue(entry_LP1)
