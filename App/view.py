@@ -66,6 +66,12 @@ def view_consulta_carga_datos(tupla_info):
     print(f"Usuarios de internet: {users}")
     return None
 
+def view_req1(result):
+    print("\nRESULTADOS REQUERIMIENTO 1")
+    print(f"Cantidad de Clusters encontrados: {result[0]}")
+    print(f"¿Están en el mismo Cluster?: {result[1]}")
+    return None
+
 def printMenu():
     print("Bienvenido")
     print("1- Inicializar catálogo")
@@ -96,6 +102,16 @@ while True:
         time_2 = tm.perf_counter()
         result = execute_consulta_carga(catalog)
         view_consulta_carga_datos(result)
+        print(f"\nTiempo de ejecución: {time_2-time_1}")
+
+    elif int(inputs[0]) == 3:
+        LP1 = input("Ingrese el Id del primer Landing Point: ")
+        LP2 = input("Ingrese el Id del segundo Landing Point: ")
+        print("Buscando, por favor espere...")
+        time_1 = tm.perf_counter()
+        result = controller.comunica_req1(catalog,LP1,LP2)
+        time_2 = tm.perf_counter()
+        view_req1(result)
         print(f"\nTiempo de ejecución: {time_2-time_1}\n")
 
 

@@ -33,6 +33,8 @@ from DISClib.ADT import map as mp
 from DISClib.ADT import graph as gr
 from DISClib.DataStructures import mapentry as me
 from DISClib.Algorithms.Sorting import shellsort as sa
+from DISClib.Algorithms.Graphs import scc
+from DISClib.Algorithms.Graphs import dfs
 assert cf
 
 """
@@ -289,6 +291,38 @@ def consulta_carga_datos(catalog):
     LastCountry = me.getValue(entryCountry)
 
     return (LandingPoints,conexiones,paises,FirstLP,LastCountry,LandingPoints_unique)
+
+def consulta_cantidad_clusters(catalog,LP1,LP2):
+    mismo_cluster = False
+    grafo_dirigido = catalog["connections_directed"]
+    mapa_paises = catalog["countries"]
+    mapa_LP = catalog["LandingPoints"]
+    estructura_scc = scc.KosarajuSCC(grafo_dirigido)
+    cantidad_clusters = estructura_scc["components"]
+
+    entry_LP1 = mp.get(mapa_LP,LP1)
+    entry_LP2 = mp.get(mapa_LP,LP2)
+    LP1_info = me.getValue(entry_LP1)
+    LP2_info = me.getValue(entry_LP2)
+    country_LP1 = getCountry(LP1_info)
+    country_LP2 = getCountry(LP2_info)
+    entry_LandingPoints_mapa_1 = mp.get(mapa_paises,country_LP1)
+    entry_LandingPoints_mapa_2 = mp.get(mapa_paises,country_LP2)
+    LandingPoints_mapa_1 = me.getValue(entry_LandingPoints_mapa_1)
+    LandingPoints_mapa_2 = me.getValue(entry_LandingPoints_mapa_2)
+    entry_cables_lista_1 = mp.get(LandingPoints_mapa_1,LP1)
+    entry_cables_lista_2 = mp.get(LandingPoints_mapa_2,LP2)
+    cables_lista_1 = me.getValue(entry_cables_lista_1)
+    cables_lista_2 = me.getValue(entry_cables_lista_2)
+    cable_1 = lt.firstElement(cables_lista_1)
+    cable_2 = lt.firstElement(cables_lista_2)
+    vertex_1 = LP1+"-"+cable_1["Id"]
+    vertex_2 = LP2+"-"+cable_2["Id"]
+    estructura_dfs = dfs.DepthFirstSearch(grafo_dirigido,vertex_1)
+    entry_consulta_req1 = mp.get(estructura_dfs["visited"],vertex_2)
+    if entry_consulta_req1 is not None:
+        mismo_cluster = True
+    return cantidad_clusters, mismo_cluster
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 
