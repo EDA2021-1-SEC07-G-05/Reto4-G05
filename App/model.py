@@ -25,6 +25,7 @@
  """
 
 
+from DISClib.DataStructures.adjlist import addEdge
 import config as cf
 import haversine as hs
 from DISClib.ADT import list as lt
@@ -42,12 +43,14 @@ los mismos.
 # Construccion de modelos
 def InitCatalog():
     catalog = {"connections":None,
+               "connections_directed":None,
                "countries":None,
                "LandingPoints": None,
                "countries_info": None,
                "cables":None}
     
     catalog["connections"] = gr.newGraph(datastructure= "ADJ_LIST", directed= False, size=14000, comparefunction= compareStopIds)
+    catalog["connections_directed"] = gr.newGraph(datastructure= "ADJ_LIST", directed= True, size= 14000, comparefunction= compareStopIds)
     catalog["countries"] = mp.newMap(numelements= 50, maptype="PROBING")
     catalog["LandingPoints"] = mp.newMap(numelements= 100, maptype="PROBING")
     catalog["countries_info"] = mp.newMap(numelements= 100, maptype="PROBING")
@@ -57,14 +60,19 @@ def InitCatalog():
 # Funciones para agregar informacion al catalogo
 def carga_connections(catalog,connection):
     graph = catalog["connections"]
+    graph_dirigido = catalog["connections_directed"]
     mapa_paises = catalog["countries"]
     mapa_LP = catalog["LandingPoints"]
-    length = connection["cable_length"]
     origin = formatOriginVertex(connection)
     destination = formatDestinationVertex(connection)
     addLandingPoint(origin, graph)
     addLandingPoint(destination,graph)
+    addLandingPoint(origin, graph_dirigido)
+    addLandingPoint(destination,graph_dirigido)
+    length = find_distance(catalog,connection)
     addConnection(graph,origin,destination,length)
+    addConnection(graph_dirigido,origin,destination,length)
+    addConnection(graph_dirigido,destination,origin,length)
     addCableInMap(connection,mapa_paises,mapa_LP)
     return None
 
@@ -96,6 +104,7 @@ def carga_LandingPointsAsKeys(catalog,LandingPointData):
 
 def connect_CableSameLP(catalog):
     grafo = catalog['connections']
+    grafo_dirigido = catalog["connections_directed"]
     mapa_paises = catalog['countries']
     mapas_LP = mp.valueSet(mapa_paises)
     for mapa_LP in lt.iterator(mapas_LP):
@@ -109,6 +118,8 @@ def connect_CableSameLP(catalog):
                     LastVertex = formatVertex(LandingPoint,anterior)
                     CurrentVertex = formatVertex(LandingPoint,cable)
                     gr.addEdge(grafo,LastVertex,CurrentVertex,100)
+                    gr.addEdge(grafo_dirigido,LastVertex,CurrentVertex,100)
+                    gr.addEdge(grafo_dirigido,CurrentVertex,LastVertex,100)
                 anterior = cable
                 i += 1
     return None
@@ -142,6 +153,7 @@ def SortCablesList(catalog):
 
 def connect_capital(catalog):
     grafo = catalog["connections"]
+    grafo_dirigido = catalog["connections_directed"]
     info_LandingPoints = catalog["LandingPoints"]
     info_paises = catalog["countries_info"]
     mapa_paises = catalog["countries"]
@@ -151,8 +163,8 @@ def connect_capital(catalog):
         entry_LandingPoints_mapa = mp.get(mapa_paises,pais)
         info_capital = me.getValue(entry_capital)
         LandingPoints_mapa = me.getValue(entry_LandingPoints_mapa)
-        lat = info_capital["CapitalLatitude"]
-        long = info_capital["CapitalLongitude"]
+        lat = float(info_capital["CapitalLatitude"])
+        long = float(info_capital["CapitalLongitude"])
         name_capital = info_capital["CapitalName"]
         LandingPoints = mp.keySet(LandingPoints_mapa)
         for LandingPoint_individual in lt.iterator(LandingPoints):
@@ -162,14 +174,21 @@ def connect_capital(catalog):
                 cable_menor_banda = lt.lastElement(ListaCables)
                 vertexCap = formatVertex(name_capital,cable_menor_banda)
                 vertex = formatVertex(LandingPoint_individual,cable_menor_banda)
+                LP_info_entry = mp.get(info_LandingPoints,LandingPoint_individual)
+                LP_info = me.getValue(LP_info_entry)
+                coordenadas_LP = (float(LP_info["latitude"]),float(LP_info["longitude"]))
+                peso = hs.haversine((lat,long),coordenadas_LP)
                 gr.insertVertex(grafo,vertexCap)
-                gr.addEdge(grafo,vertex,vertexCap,100)
+                gr.insertVertex(grafo_dirigido,vertexCap)
+                gr.addEdge(grafo,vertex,vertexCap,peso)
+                gr.addEdge(grafo_dirigido,vertex,vertexCap,peso)
+                gr.addEdge(grafo_dirigido,vertexCap,vertex,peso)
             else:
                 AllLandingPoints = mp.valueSet(info_LandingPoints)
                 menor = 1E16
                 for LP_in_mapa_completo in lt.iterator(AllLandingPoints):
-                    LP_lat = LP_in_mapa_completo["latitude"]
-                    LP_long = LP_in_mapa_completo["longitude"]
+                    LP_lat = float(LP_in_mapa_completo["latitude"])
+                    LP_long = float(LP_in_mapa_completo["longitude"])
                     distance = hs.haversine((lat,long),(LP_lat,LP_long))
                     if distance < menor:
                         menor = distance
@@ -183,8 +202,24 @@ def connect_capital(catalog):
                 vertexCap = formatVertex(name_capital,cable_menor_banda)
                 vertex = formatVertex(id_menor,cable_menor_banda)
                 gr.insertVertex(grafo,vertexCap)
-                gr.addEdge(grafo,vertex,vertexCap,100)
+                gr.insertVertex(grafo_dirigido,vertexCap)
+                gr.addEdge(grafo,vertex,vertexCap,menor)
+                gr.addEdge(grafo_dirigido,vertex,vertexCap,menor)
+                gr.addEdge(grafo_dirigido,vertexCap,vertex,menor)
     return None
+
+def find_distance(catalog,connection):
+    map = catalog["LandingPoints"]
+    origin_id = connection["\ufefforigin"]
+    destination_id = connection["destination"]
+    origin_entry = mp.get(map,origin_id)
+    dest_entry = mp.get(map,destination_id)
+    origin_info = me.getValue(origin_entry)
+    dest_info = me.getValue(dest_entry)
+    coordinates_origin = (float(origin_info["latitude"]),float(origin_info["longitude"]))
+    coordinates_dest = (float(dest_info["latitude"]),float(dest_info["longitude"]))
+    peso = hs.haversine(coordinates_dest,coordinates_origin)
+    return peso
 
 
 # Funciones para creacion de datos
