@@ -35,6 +35,7 @@ from DISClib.DataStructures import mapentry as me
 from DISClib.Algorithms.Sorting import shellsort as sa
 from DISClib.Algorithms.Graphs import scc
 from DISClib.Algorithms.Graphs import dfs
+from DISClib.Algorithms.Graphs import dijsktra as djk
 assert cf
 
 """
@@ -189,6 +190,7 @@ def connect_capital(catalog):
                 gr.addEdge(grafo,vertex,vertexCap,peso)
                 gr.addEdge(grafo_dirigido,vertex,vertexCap,peso)
                 gr.addEdge(grafo_dirigido,vertexCap,vertex,peso)
+                addCapitalLP(pais,name_capital,cable_menor_banda["Id"],mapa_paises)
             else:
                 AllLandingPoints = mp.valueSet(info_LandingPoints)
                 menor = 1E16
@@ -212,6 +214,7 @@ def connect_capital(catalog):
                 gr.addEdge(grafo,vertex,vertexCap,menor)
                 gr.addEdge(grafo_dirigido,vertex,vertexCap,menor)
                 gr.addEdge(grafo_dirigido,vertexCap,vertex,menor)
+                addCapitalLP(pais,name_capital,cable_menor_banda["Id"],mapa_paises)
     return None
 
 def find_distance(catalog,connection):
@@ -277,6 +280,21 @@ def addCableInMap(connection,mapa_paises,mapa_LP):
     lt.addLast(cablesDestination,formatCableInfo(connection))
     return None
 
+def addCapitalLP(country,cap_name,cable_name,mapa_paises):
+    entry_LP_map = mp.get(mapa_paises,country)
+    LP_map = me.getValue(entry_LP_map)
+    entry_cable_list = mp.get(LP_map,cap_name)
+    if entry_cable_list is not None:
+        cable_list = me.getValue(entry_cable_list)
+        lt.addLast(cable_list, cable_name)
+        mp.put(LP_map,cap_name,cable_list)
+    else:
+        cable_list = lt.newList("ARRAY_LIST")
+        lt.addLast(cable_list, cable_name)
+        mp.put(LP_map,cap_name,cable_list)
+    mp.put(mapa_paises,country,LP_map)
+    return None
+
 # Funciones de consulta
 def consulta_carga_datos(catalog):
     """
@@ -337,6 +355,50 @@ def consulta_cantidad_clusters(catalog,LP1_name,LP2_name):
         mismo_cluster = True
     return cantidad_clusters, mismo_cluster
 
+def consulta_ruta_minima_paises(catalog,pais_1,pais_2):
+    grafo_dirigido = catalog["connections_directed"]
+    mapa_info_paises = catalog["countries_info"]
+    mapa_paises = catalog["countries"]
+    entry_info_pais_1 = mp.get(mapa_info_paises,pais_1)
+    entry_info_pais_2 = mp.get(mapa_info_paises,pais_2)
+    info_pais_1 = me.getValue(entry_info_pais_1)
+    info_pais_2 = me.getValue(entry_info_pais_2)
+    cap_name_1 = info_pais_1["CapitalName"]
+    cap_name_2 = info_pais_2["CapitalName"]
+
+    entry_LP_mapa_1 = mp.get(mapa_paises,pais_1)
+    entry_LP_mapa_2 = mp.get(mapa_paises,pais_2)
+    LP_mapa_1 = me.getValue(entry_LP_mapa_1)
+    LP_mapa_2 = me.getValue(entry_LP_mapa_2)
+    entry_cables_list_1 = mp.get(LP_mapa_1,cap_name_1)
+    entry_cables_list_2 = mp.get(LP_mapa_2,cap_name_2)
+    cables_list_1 = me.getValue(entry_cables_list_1)
+    cables_list_2 = me.getValue(entry_cables_list_2)
+    cable_name_1 = lt.lastElement(cables_list_1)
+    cable_name_2 = lt.lastElement(cables_list_2)
+
+    vertex_1 = cap_name_1+"-"+cable_name_1
+    vertex_2 = cap_name_2+"-"+cable_name_2
+    estructura_dijkstra = djk.Dijkstra(grafo_dirigido,vertex_1)
+    ruta = ruta_encontrada(estructura_dijkstra,vertex_1,vertex_2)
+    return ruta
+
+def ruta_encontrada(estructura,vertex_1,vertex_2):
+    ruta = lt.newList("SINGLE_LINKED")
+    mapa_visitados = estructura["visited"]
+    current = vertex_2
+    while current != vertex_1:
+        lista = [None,None,None]
+        entry_info_current = mp.get(mapa_visitados,current)
+        info_current = me.getValue(entry_info_current)
+        lista[1] = current
+        current = info_current["edgeTo"]["vertexA"]
+        lista[2] = info_current["distTo"]
+        lista[0] = current
+        lt.addFirst(ruta,lista)
+    return ruta
+
+    return None
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 # Funciones de ordenamiento

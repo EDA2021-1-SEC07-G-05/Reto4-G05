@@ -72,6 +72,16 @@ def view_req1(result):
     print(f"¿Están en el mismo Cluster?: {result[1]}")
     return None
 
+def view_req2(result):
+    last_element = lt.lastElement(result)
+    distancia_total = last_element[2]
+    distancia_anterior = 0
+    for lista in lt.iterator(result):
+        print(f"Origen: {lista[0]}, Destino: {lista[1]}, Distancia: {lista[2]-distancia_anterior}")
+        distancia_anterior = lista[2]
+    print(f"Distancia total: {distancia_total}")
+    return None
+
 def printMenu():
     print("Bienvenido")
     print("1- Inicializar catálogo")
@@ -105,8 +115,8 @@ while True:
         print(f"\nTiempo de ejecución: {time_2-time_1}")
 
     elif int(inputs[0]) == 3:
-        LP1 = input("Ingrese el Id del primer Landing Point: ")
-        LP2 = input("Ingrese el Id del segundo Landing Point: ")
+        LP1 = input("Ingrese el nombre del primer Landing Point: ")
+        LP2 = input("Ingrese el nombre del segundo Landing Point: ")
         print("Buscando, por favor espere...")
         time_1 = tm.perf_counter()
         result = controller.comunica_req1(catalog,LP1,LP2)
@@ -114,6 +124,14 @@ while True:
         view_req1(result)
         print(f"\nTiempo de ejecución: {time_2-time_1}\n")
 
+    elif int(inputs[0]) == 5:
+        country_1 = input("Ingrese el nombre del país A: ").lower()
+        country_2 = input("Ingrese el nombre del país B: ").lower()
+        time_1 = tm.perf_counter()
+        result = controller.comunica_req2(catalog,country_1,country_2)
+        view_req2(result)
+        time_2 = tm.perf_counter()
+        print(f"\nTiempo de ejecución: {time_2-time_1}\n")
 
     else:
         sys.exit(0)
