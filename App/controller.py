@@ -64,8 +64,11 @@ def comunica_consulta_carga(catalog):
 def comunica_req1(catalog,LP1,LP2):
     return model.consulta_cantidad_clusters(catalog,LP1,LP2)
 
-def comunica_req2(catalog,pais_1,pais_2):
+def comunica_req3(catalog,pais_1,pais_2):
     return model.consulta_ruta_minima_paises(catalog,pais_1,pais_2)
+
+def comunica_req5(catalog,LandingPoint_name):
+    return model.consulta_paises_afectados(catalog,LandingPoint_name)
 
 # Funciones de ordenamiento
 

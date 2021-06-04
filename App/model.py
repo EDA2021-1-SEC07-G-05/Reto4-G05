@@ -171,6 +171,7 @@ def connect_capital(catalog):
         lat = float(info_capital["CapitalLatitude"])
         long = float(info_capital["CapitalLongitude"])
         name_capital = info_capital["CapitalName"]
+        addCapitalLP_info(catalog,name_capital,pais)
         LandingPoints = mp.keySet(LandingPoints_mapa)
         for LandingPoint_individual in lt.iterator(LandingPoints):
             entry_listaCables = mp.get(LandingPoints_mapa,LandingPoint_individual)
@@ -188,7 +189,7 @@ def connect_capital(catalog):
                 gr.addEdge(grafo,vertex,vertexCap,peso)
                 gr.addEdge(grafo_dirigido,vertex,vertexCap,peso)
                 gr.addEdge(grafo_dirigido,vertexCap,vertex,peso)
-                addCapitalLP(pais,cable_menor_banda["Id"],mapa_paises)
+                addCapitalLP(pais,name_capital,cable_menor_banda["Id"],mapa_paises)
             else:
                 AllLandingPoints = mp.valueSet(info_LandingPoints)
                 menor = 1E16
@@ -212,7 +213,7 @@ def connect_capital(catalog):
                 gr.addEdge(grafo,vertex,vertexCap,menor)
                 gr.addEdge(grafo_dirigido,vertex,vertexCap,menor)
                 gr.addEdge(grafo_dirigido,vertexCap,vertex,menor)
-                addCapitalLP(pais,cable_menor_banda["Id"],mapa_paises)
+                addCapitalLP(pais,name_capital,cable_menor_banda["Id"],mapa_paises)
     return None
 
 def find_distance(catalog,connection):
@@ -239,7 +240,7 @@ def connect_capital_cables(catalog):
         entry_info_pais = mp.get(info_paises,pais)
         mapLP, info_pais = me.getValue(entry_mapLP), me.getValue(entry_info_pais)
         cap_name = info_pais["CapitalName"]
-        entry_capital_cables_list = mp.get(mapLP,"capital")
+        entry_capital_cables_list = mp.get(mapLP,cap_name)
         capital_cables_list = me.getValue(entry_capital_cables_list)
         i = 0
         for cable in lt.iterator(capital_cables_list):
@@ -302,13 +303,17 @@ def addCableInMap(connection,mapa_paises,mapa_LP):
     lt.addLast(cablesDestination,formatCableInfo(connection))
     return None
 
-def addCapitalLP(country,cable_name,mapa_paises):
+def addCapitalLP(country,cap_name,cable_name,mapa_paises):
     entry_LP_map = mp.get(mapa_paises,country)
     LP_map = me.getValue(entry_LP_map)
-    mp.put(LP_map,"capital",cable_name)
+    mp.put(LP_map,cap_name,cable_name)
     mp.put(mapa_paises,country,LP_map)
     return None
 
+def addCapitalLP_info(catalog, cap_name, country):
+    mapa_LP_info = catalog["LandingPoints"]
+    mp.put(mapa_LP_info,cap_name,{"name": "default"+", "+country})
+    return None
 # Funciones de consulta
 def consulta_carga_datos(catalog):
     """
@@ -384,8 +389,8 @@ def consulta_ruta_minima_paises(catalog,pais_1,pais_2):
     entry_LP_mapa_2 = mp.get(mapa_paises,pais_2)
     LP_mapa_1 = me.getValue(entry_LP_mapa_1)
     LP_mapa_2 = me.getValue(entry_LP_mapa_2)
-    entry_cable_name_1 = mp.get(LP_mapa_1,"capital")
-    entry_cable_name_2 = mp.get(LP_mapa_2,"capital")
+    entry_cable_name_1 = mp.get(LP_mapa_1,cap_name_1)
+    entry_cable_name_2 = mp.get(LP_mapa_2,cap_name_2)
     cable_name_1 = me.getValue(entry_cable_name_1)
     cable_name_2 = me.getValue(entry_cable_name_2)
 
@@ -416,7 +421,35 @@ def ruta_encontrada(estructura,vertex_1,cap_name):
         lt.addFirst(ruta,lista)
     return ruta
 
-    return None
+def consulta_paises_afectados(catalog,LandingPoint_name):
+    grafo = catalog["connections"]
+    mapa_names_ID = catalog["LandingPoints_names"]
+    mapa_conexiones = catalog["countries"]
+    mapa_LP_info = catalog["LandingPoints"]
+    mapa_paises_afectados = mp.newMap(numelements=50, maptype="PROBING")
+
+    entry_LP = mp.get(mapa_names_ID,LandingPoint_name)
+    LandingPoint = me.getValue(entry_LP)
+    entry_LP_info = mp.get(mapa_LP_info,LandingPoint)
+    LP_info = me.getValue(entry_LP_info)
+    country = getCountry(LP_info)
+
+    entry_mapa_LP = mp.get(mapa_conexiones,country)
+    mapa_LP = me.getValue(entry_mapa_LP)
+    entry_lista_cables = mp.get(mapa_LP,LandingPoint)
+    lista_cables = me.getValue(entry_lista_cables)
+
+    for cable in lt.iterator(lista_cables):
+        current_vertex = formatVertex(LandingPoint,cable)
+        adyacentes = gr.adjacents(grafo,current_vertex)
+        for vertex in lt.iterator(adyacentes):
+            adyacente_LP = vertex.split("-")[0]
+            entry_LP = mp.get(mapa_LP_info,adyacente_LP)
+            info_LP_adyacente = me.getValue(entry_LP)
+            country_afectado = getCountry(info_LP_adyacente)
+            mp.put(mapa_paises_afectados,country_afectado,"default")
+    lista_paises_afectados = mp.keySet(mapa_paises_afectados)
+    return lista_paises_afectados
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 # Funciones de ordenamiento

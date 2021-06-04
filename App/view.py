@@ -72,7 +72,8 @@ def view_req1(result):
     print(f"¿Están en el mismo Cluster?: {result[1]}")
     return None
 
-def view_req2(result):
+def view_req3(result):
+    print("\nRESULTADOS REQUERIMIENTO 3")
     last_element = lt.lastElement(result)
     distancia_total = last_element[2]
     distancia_anterior = 0
@@ -80,6 +81,15 @@ def view_req2(result):
         print(f"Origen: {lista[0]}, Destino: {lista[1]}, Distancia: {lista[2]-distancia_anterior}")
         distancia_anterior = lista[2]
     print(f"Distancia total: {distancia_total}")
+    return None
+
+def view_req5(result):
+    print("\nRESULTADOS REQUERIMIENTO 5")
+    print(f"Número de paises directamente afectados por el fallo: {lt.size(result)}")
+    i = 1
+    for pais in lt.iterator(result):
+        print(f"{i} {pais.capitalize()}")
+        i += 1
     return None
 
 def printMenu():
@@ -128,9 +138,18 @@ while True:
         country_1 = input("Ingrese el nombre del país A: ").lower()
         country_2 = input("Ingrese el nombre del país B: ").lower()
         time_1 = tm.perf_counter()
-        result = controller.comunica_req2(catalog,country_1,country_2)
-        view_req2(result)
+        result = controller.comunica_req3(catalog,country_1,country_2)
+        view_req3(result)
         time_2 = tm.perf_counter()
+        print(f"\nTiempo de ejecución: {time_2-time_1}\n")
+
+    elif int(inputs[0]) == 7:
+        LandingPoint = input("Ingrese el nombre del Landing Point que quiere simular como afectado: ")
+        print("Calculando daños, por favor espere...")
+        time_1 = tm.perf_counter()
+        result = controller.comunica_req5(catalog,LandingPoint)
+        time_2 = tm.perf_counter()
+        view_req5(result)
         print(f"\nTiempo de ejecución: {time_2-time_1}\n")
 
     else:
