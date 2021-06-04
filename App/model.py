@@ -30,7 +30,7 @@ from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
 from DISClib.ADT import graph as gr
 from DISClib.DataStructures import mapentry as me
-from DISClib.Algorithms.Sorting import shellsort as sa
+from DISClib.Algorithms.Sorting import mergesort as sa
 from DISClib.Algorithms.Graphs import scc
 from DISClib.Algorithms.Graphs import dfs
 from DISClib.Algorithms.Graphs import dijsktra as djk
@@ -426,13 +426,18 @@ def consulta_paises_afectados(catalog,LandingPoint_name):
     mapa_names_ID = catalog["LandingPoints_names"]
     mapa_conexiones = catalog["countries"]
     mapa_LP_info = catalog["LandingPoints"]
+    info_paises = catalog["countries_info"]
     mapa_paises_afectados = mp.newMap(numelements=50, maptype="PROBING")
+    lista_paises_afectados = lt.newList(datastructure="ARRAY_LIST")
 
     entry_LP = mp.get(mapa_names_ID,LandingPoint_name)
     LandingPoint = me.getValue(entry_LP)
     entry_LP_info = mp.get(mapa_LP_info,LandingPoint)
     LP_info = me.getValue(entry_LP_info)
     country = getCountry(LP_info)
+    entry_info_country = mp.get(info_paises,country)
+    info_country = me.getValue(entry_info_country)
+    coordinates_local = (float(info_country["CapitalLatitude"]),float(info_country["CapitalLongitude"]))
 
     entry_mapa_LP = mp.get(mapa_conexiones,country)
     mapa_LP = me.getValue(entry_mapa_LP)
@@ -447,9 +452,20 @@ def consulta_paises_afectados(catalog,LandingPoint_name):
             entry_LP = mp.get(mapa_LP_info,adyacente_LP)
             info_LP_adyacente = me.getValue(entry_LP)
             country_afectado = getCountry(info_LP_adyacente)
-            mp.put(mapa_paises_afectados,country_afectado,"default")
-    lista_paises_afectados = mp.keySet(mapa_paises_afectados)
-    return lista_paises_afectados
+            entry_info_afectado = mp.get(info_paises,country_afectado)
+            info_afectado = me.getValue(entry_info_afectado)
+            coordinates_afectado = (float(info_afectado["CapitalLatitude"]),float(info_afectado["CapitalLongitude"]))
+            distancia = float(hs.haversine(coordinates_local,coordinates_afectado))
+            mp.put(mapa_paises_afectados,distancia,country_afectado)
+
+    keys = mp.keySet(mapa_paises_afectados)
+    lista_distancias_sorted = sa.sort(keys,cmpfunction=compareDistance)
+    for key in lt.iterator(lista_distancias_sorted):
+        entry_final = mp.get(mapa_paises_afectados,key)
+        final = me.getValue(entry_final)
+        lt.addLast(lista_paises_afectados,final)
+
+    return lista_paises_afectados, lista_distancias_sorted
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 # Funciones de ordenamiento

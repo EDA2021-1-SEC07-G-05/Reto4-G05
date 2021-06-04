@@ -85,10 +85,10 @@ def view_req3(result):
 
 def view_req5(result):
     print("\nRESULTADOS REQUERIMIENTO 5")
-    print(f"Número de paises directamente afectados por el fallo: {lt.size(result)}")
+    print(f"Número de paises directamente afectados por el fallo: {lt.size(result[0])}")
     i = 1
-    for pais in lt.iterator(result):
-        print(f"{i} {pais.capitalize()}")
+    for pais in lt.iterator(result[0]):
+        print(f"{i} {pais.capitalize()}, Distancia: {lt.getElement(result[1],i)}")
         i += 1
     return None
 
