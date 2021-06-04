@@ -78,9 +78,9 @@ def view_req3(result):
     distancia_total = last_element[2]
     distancia_anterior = 0
     for lista in lt.iterator(result):
-        print(f"Origen: {lista[0]}, Destino: {lista[1]}, Distancia: {lista[2]-distancia_anterior}")
+        print(f"Origen: {lista[0]}, Destino: {lista[1]}, Distancia: {lista[2]-distancia_anterior:.2f} km")
         distancia_anterior = lista[2]
-    print(f"Distancia total: {distancia_total}")
+    print(f"Distancia total: {distancia_total:.2f} km")
     return None
 
 def view_req5(result):
@@ -88,7 +88,7 @@ def view_req5(result):
     print(f"Número de paises directamente afectados por el fallo: {lt.size(result[0])}")
     i = 1
     for pais in lt.iterator(result[0]):
-        print(f"{i} {pais.capitalize()}, Distancia: {lt.getElement(result[1],i)}")
+        print(f"{i} {pais.capitalize()}, Distancia: {lt.getElement(result[1],i):.2f} km")
         i += 1
     return None
 

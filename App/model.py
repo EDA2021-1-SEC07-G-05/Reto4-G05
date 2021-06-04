@@ -502,9 +502,7 @@ def compareBandas(cable1,cable2):
         return 0
 
 def compareDistance(distance1,distance2):
-    if distance1 > distance2:
-        return 1
-    elif distance1 < distance2:
-        return -1
+    if distance1 < distance2:
+        return True
     else:
-        return 0
+        return False
