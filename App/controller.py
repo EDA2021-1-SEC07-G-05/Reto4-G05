@@ -21,6 +21,7 @@
  """
 
 from os import read
+import tracemalloc as tr
 import config as cf
 import model
 import csv
@@ -59,21 +60,77 @@ def comunica_carga_datos(catalog):
     return None
 
 def comunica_consulta_carga(catalog):
-    return model.consulta_carga_datos(catalog)
+    tr.start()
+    start_memory = getMemory()
+    result = model.consulta_carga_datos(catalog)
+    stop_memory = getMemory()
+    print(f"MEMORIA USADA: {deltaMemory(start_memory,stop_memory)}")
+    tr.stop()
+    return result
 
 def comunica_req1(catalog,LP1,LP2):
-    return model.consulta_cantidad_clusters(catalog,LP1,LP2)
+    tr.start()
+    start_memory = getMemory()
+    result = model.consulta_cantidad_clusters(catalog,LP1,LP2)
+    stop_memory = getMemory()
+    print(f"MEMORIA USADA: {deltaMemory(start_memory,stop_memory)}")
+    tr.stop()
+    return result
 
 def comunica_req2(catalog):
-    return model.consulta_landing_points(catalog)
+    tr.start()
+    start_memory = getMemory()
+    result = model.consulta_landing_points(catalog)
+    stop_memory = getMemory()
+    print(f"MEMORIA USADA: {deltaMemory(start_memory,stop_memory)}")
+    tr.stop()
+    return result
 
 def comunica_req3(catalog,pais_1,pais_2):
-    return model.consulta_ruta_minima_paises(catalog,pais_1,pais_2)
+    tr.start()
+    start_memory = getMemory()
+    result = model.consulta_ruta_minima_paises(catalog,pais_1,pais_2)
+    stop_memory = getMemory()
+    print(f"MEMORIA USADA: {deltaMemory(start_memory,stop_memory)}")
+    tr.stop()
+    return result
 
 def comunica_req4(catalog):
-    return model.consulta_red_expansion_minima(catalog)
+    tr.start()
+    start_memory = getMemory()
+    result = model.consulta_red_expansion_minima(catalog)
+    stop_memory = getMemory()
+    print(f"MEMORIA USADA: {deltaMemory(start_memory,stop_memory)}")
+    tr.stop()
+    return result
 
 def comunica_req5(catalog,LandingPoint_name):
-    return model.consulta_paises_afectados(catalog,LandingPoint_name)
+    tr.start()
+    start_memory = getMemory()
+    result = model.consulta_paises_afectados(catalog,LandingPoint_name)
+    stop_memory = getMemory()
+    print(f"MEMORIA USADA: {deltaMemory(start_memory,stop_memory)}")
+    tr.stop()
+    return result
 
+
+def getMemory():
+    """
+    Devuelve una 'pantallazo' de la memoria usada
+    """
+    return tr.take_snapshot()
+
+def deltaMemory(star_memory, stop_memory):
+    """
+    Devuelve la diferencia entre dos magnitudes de memoria tomadas
+    en dos diferentes instantes. Las devuelve en KB
+    """
+    memory_diff = stop_memory.compare_to(star_memory, 'filename')
+    delta_memory = 0.0
+
+    for stat in memory_diff:
+        delta_memory = delta_memory + stat.size_diff
+
+    delta_memory /= 1024.0
+    return delta_memory
 

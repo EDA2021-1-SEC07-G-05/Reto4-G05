@@ -540,7 +540,7 @@ def consulta_paises_afectados(catalog,LandingPoint_name):
             mp.put(mapa_paises_afectados,distancia,country_afectado)
 
     keys = mp.keySet(mapa_paises_afectados)
-    lista_distancias_sorted = sa.sort(keys,cmpfunction=compareDistance)
+    lista_distancias_sorted = sa.sort(keys,cmpfunction=compareDistanceEspecial)
     for key in lt.iterator(lista_distancias_sorted):
         entry_final = mp.get(mapa_paises_afectados,key)
         final = me.getValue(entry_final)
@@ -581,6 +581,12 @@ def compareBandas(cable1,cable2):
 
 def compareDistance(distance1,distance2):
     if distance1 < distance2:
+        return True
+    else:
+        return False
+
+def compareDistanceEspecial(d1,d2):
+    if d1 > d2:
         return True
     else:
         return False
