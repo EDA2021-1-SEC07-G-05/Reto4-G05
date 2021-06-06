@@ -397,7 +397,6 @@ def consulta_red_expansion_minima(catalog):
     conexion_max = lt.firstElement(lista_ordenada)
     conexion_min = lt.lastElement(lista_ordenada)
 
-    #Hallar rama más larga
     max_ramas = 0
     vertices_A = mp.keySet(mapa_vertices)
     for vertex in lt.iterator(vertices_A):
