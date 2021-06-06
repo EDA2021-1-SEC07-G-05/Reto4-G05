@@ -23,7 +23,7 @@
  *
  * Dario Correal - Version inicial
  """
-
+from DISClib.DataStructures.edge import weight
 import config as cf
 import haversine as hs
 from DISClib.ADT import list as lt
@@ -34,6 +34,7 @@ from DISClib.Algorithms.Sorting import mergesort as sa
 from DISClib.Algorithms.Graphs import scc
 from DISClib.Algorithms.Graphs import dfs
 from DISClib.Algorithms.Graphs import dijsktra as djk
+from DISClib.Algorithms.Graphs import prim 
 assert cf
 
 """
@@ -303,14 +304,14 @@ def addCableInMap(connection,mapa_paises,mapa_LP):
     lt.addLast(cablesDestination,formatCableInfo(connection))
     return None
 
-def addCapitalLP(country,cap_name,cable_name,mapa_paises):
+def addCapitalLP(country,cap_name,cable_name,mapa_paises): 
     entry_LP_map = mp.get(mapa_paises,country)
     LP_map = me.getValue(entry_LP_map)
     mp.put(LP_map,cap_name,cable_name)
     mp.put(mapa_paises,country,LP_map)
     return None
 
-def addCapitalLP_info(catalog, cap_name, country):
+def addCapitalLP_info(catalog, cap_name, country): 
     mapa_LP_info = catalog["LandingPoints"]
     mp.put(mapa_LP_info,cap_name,{"name": "default"+", "+country})
     return None
@@ -336,6 +337,89 @@ def consulta_carga_datos(catalog):
     LastCountry = me.getValue(entryCountry)
 
     return (LandingPoints,conexiones,paises,FirstLP,LastCountry,LandingPoints_unique)
+
+def consulta_landing_points(catalog):
+
+    mapa_paises = catalog['countries']
+    mapa_LPS = catalog['LandingPoints']
+    countries = mp.keySet(mapa_paises)
+    max_cables=0
+    lista_LP = lt.newList(datastructure='ARRAY_LIST')
+    for country in lt.iterator(countries):
+        entry = mp.get(mapa_paises, country)
+        mapa_LP = me.getValue(entry)
+        landingPoints= mp.keySet(mapa_LP)
+        for LP in lt.iterator(landingPoints):
+            num_cables = 0
+            entry = mp.get(mapa_LP,LP)
+            lista_cables = me.getValue(entry)
+            if type(lista_cables) is not str:
+                num_cables = lt.size(lista_cables)
+                if num_cables > max_cables:
+                    max_cables = num_cables
+                    lista_LP = lt.newList(datastructure='ARRAY_LIST')
+                    info = {'LP': LP, 'country': country,'num_cables': num_cables }
+                    lt.addLast(lista_LP, info)
+                elif num_cables == max_cables:
+                    info = {'LP': LP, 'country': country,'num_cables': num_cables }
+                    lt.addLast(lista_LP, info)        
+
+    for info in lt.iterator(lista_LP):
+        LP = info['LP']
+        entry_2= mp.get(mapa_LPS,LP)
+        info_LP = me.getValue(entry_2)
+        info['name'] = info_LP['name']
+
+    return lista_LP
+
+def consulta_red_expansion_minima(catalog):
+
+    grafo = catalog['connections']
+    estructura_MST = prim.PrimMST(grafo)
+    mapa_MST = estructura_MST['edgeTo']
+    distance = 0
+    keys = mp.keySet(mapa_MST)
+    nodos = lt.size(keys)
+    lista_info = lt.newList(datastructure='ARRAY_LIST')
+    mapa_vertices = mp.newMap(nodos,maptype='PROBING',loadfactor=0.5)
+    for key in lt.iterator(keys):
+        entry = mp.get(mapa_MST,key)
+        value = me.getValue(entry)
+        vertexA = value['vertexA']
+        vertexB = value['vertexB']
+        weight = value['weight']
+        distance += weight
+        info = {'vertexA': vertexA, 'vertexB': vertexB,'weight':weight}
+        lt.addLast(lista_info,info)
+        mp.put(mapa_vertices,vertexA,vertexB)
+    lista_ordenada = sa.sort(lista_info,cmpfunction=compareWeights)
+    conexion_max = lt.firstElement(lista_ordenada)
+    conexion_min = lt.lastElement(lista_ordenada)
+
+    #Hallar rama más larga
+    max_ramas = 0
+    vertices_A = mp.keySet(mapa_vertices)
+    for vertex in lt.iterator(vertices_A):
+        lista_rama = lt.newList(datastructure='ARRAY_LIST')
+        info_rama = consulta_rama_mas_larga(mapa_vertices,vertex,lista_rama)
+        num_ramas = lt.size(info_rama)
+        print(max_ramas)
+        if num_ramas > max_ramas:
+            lista_rama_larga = info_rama
+            max_ramas = num_ramas
+            
+    return  lista_rama_larga, nodos, distance, conexion_max, conexion_min
+
+
+def consulta_rama_mas_larga(mapa_vertices,vertex,lista_rama):
+
+    entry = mp.get(mapa_vertices,vertex)
+    if entry is not None :
+        lt.addLast(lista_rama,entry)
+        vertex_B = me.getValue(entry)
+        vertex = vertex_B
+        consulta_rama_mas_larga(mapa_vertices,vertex,lista_rama)
+    return lista_rama
 
 def consulta_cantidad_clusters(catalog,LP1_name,LP2_name):
     mismo_cluster = False
@@ -505,4 +589,12 @@ def compareDistance(distance1,distance2):
     if distance1 < distance2:
         return True
     else:
+        return False
+
+def compareWeights(info_1,info_2):
+    weight_1 = info_1['weight']
+    weight_2 = info_2['weight']
+    if weight_1 > weight_2:
+        return True
+    else: 
         return False

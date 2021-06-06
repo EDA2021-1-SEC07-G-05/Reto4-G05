@@ -72,6 +72,22 @@ def view_req1(result):
     print(f"¿Están en el mismo Cluster?: {result[1]}")
     return None
 
+def view_req2(result):
+    
+    print("\nRESULTADOS REQUERIMIENTO 2\n")
+    i=1
+    for LP in lt.iterator(result):
+        identificador = LP['LP']
+        pais = LP['country']
+        num_cables = LP['num_cables']
+        name = LP['name']
+        print(f'Identificador landing point #{i}: {identificador}')
+        print(f'Nombre: {name}')
+        print(f'País: {pais}')
+        i +=1
+    print(f'Total de cables conectados: {num_cables}\n')
+    return None
+
 def view_req3(result):
     print("\nRESULTADOS REQUERIMIENTO 3")
     last_element = lt.lastElement(result)
@@ -81,6 +97,30 @@ def view_req3(result):
         print(f"Origen: {lista[0]}, Destino: {lista[1]}, Distancia: {lista[2]-distancia_anterior:.2f} km")
         distancia_anterior = lista[2]
     print(f"Distancia total: {distancia_total:.2f} km")
+    return None
+
+def view_req4(result):
+
+    print("\nRESULTADOS REQUERIMIENTO 4\n")
+    num_nodos = result[1]
+    distance = result[2]
+    vertexA_max = result[3]['vertexA']
+    vertexB_max = result[3]['vertexB']
+    weight_max= result[3]['weight']
+    vertexA_min = result[4]['vertexA']
+    vertexB_min = result[4]['vertexB']
+    weight_min = result[4]['weight']
+    rama_mas_larga = result[0]
+    print(f'Número de nodos conectados: {num_nodos}')
+    print(f'Distancia total de la red de expansión mínima: {distance:.2f} Km')
+    print(f'Conexión más larga: {vertexA_max} - {vertexB_max}, distancia: {weight_max:.2f} Km')
+    print(f'Conexión más corta: {vertexA_min} - {vertexB_min}, distancia: {weight_min:.2f} Km')
+    print('Rama más larga de la red de expansión mínima: \n')
+    for entry in lt.iterator(rama_mas_larga):
+        vertexA = entry['key']
+        vertexB = entry['value']
+        print(f'{vertexA} - {vertexB}')
+
     return None
 
 def view_req5(result):
@@ -134,12 +174,27 @@ while True:
         view_req1(result)
         print(f"\nTiempo de ejecución: {time_2-time_1}\n")
 
+    elif int(inputs[0]) == 4:
+        print("Buscando, por favor espere...")
+        time_1 = tm.perf_counter()
+        result = controller.comunica_req2(catalog)
+        time_2 = tm.perf_counter()
+        view_req2(result)
+        print(f"\nTiempo de ejecución: {time_2-time_1}\n")
+
     elif int(inputs[0]) == 5:
         country_1 = input("Ingrese el nombre del país A: ").lower()
         country_2 = input("Ingrese el nombre del país B: ").lower()
         time_1 = tm.perf_counter()
         result = controller.comunica_req3(catalog,country_1,country_2)
         view_req3(result)
+        time_2 = tm.perf_counter()
+        print(f"\nTiempo de ejecución: {time_2-time_1}\n")
+
+    elif int(inputs[0]) == 6:
+        time_1 = tm.perf_counter()
+        result = controller.comunica_req4(catalog)
+        view_req4(result)
         time_2 = tm.perf_counter()
         print(f"\nTiempo de ejecución: {time_2-time_1}\n")
 
