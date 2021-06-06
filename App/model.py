@@ -315,7 +315,9 @@ def addCapitalLP_info(catalog, cap_name, country):
     mapa_LP_info = catalog["LandingPoints"]
     mp.put(mapa_LP_info,cap_name,{"name": "default"+", "+country})
     return None
+
 # Funciones de consulta
+
 def consulta_carga_datos(catalog):
     """
     Consulta las propiedades de los datos y las estructuras cargadas
@@ -369,7 +371,6 @@ def consulta_landing_points(catalog):
         entry_2= mp.get(mapa_LPS,LP)
         info_LP = me.getValue(entry_2)
         info['name'] = info_LP['name']
-
     return lista_LP
 
 def consulta_red_expansion_minima(catalog):
@@ -403,13 +404,10 @@ def consulta_red_expansion_minima(catalog):
         lista_rama = lt.newList(datastructure='ARRAY_LIST')
         info_rama = consulta_rama_mas_larga(mapa_vertices,vertex,lista_rama)
         num_ramas = lt.size(info_rama)
-        print(max_ramas)
         if num_ramas > max_ramas:
             lista_rama_larga = info_rama
             max_ramas = num_ramas
-            
     return  lista_rama_larga, nodos, distance, conexion_max, conexion_min
-
 
 def consulta_rama_mas_larga(mapa_vertices,vertex,lista_rama):
 
@@ -550,9 +548,6 @@ def consulta_paises_afectados(catalog,LandingPoint_name):
         lt.addLast(lista_paises_afectados,final)
 
     return lista_paises_afectados, lista_distancias_sorted
-# Funciones utilizadas para comparar elementos dentro de una lista
-
-# Funciones de ordenamiento
 
 #Funciones de comparación
 def compareStopIds(stop, keyvaluestop):

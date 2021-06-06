@@ -76,6 +76,4 @@ def comunica_req4(catalog):
 def comunica_req5(catalog,LandingPoint_name):
     return model.consulta_paises_afectados(catalog,LandingPoint_name)
 
-# Funciones de ordenamiento
 
-# Funciones de consulta sobre el catálogo
